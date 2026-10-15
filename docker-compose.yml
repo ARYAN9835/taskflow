@@ -1,0 +1,36 @@
+services:
+  # 1. MySQL Database Container
+  mysql-db:
+    image: mysql:8.0
+    container_name: taskflow-mysql
+    environment:
+      MYSQL_DATABASE: taskflow_db
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3307:3306" # Maps host port 3307 to container port 3306 so it doesn't clash with your local MySQL
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Spring Boot Backend Container
+  taskflow-app:
+    build: .
+    container_name: taskflow-backend
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    environment:
+      # Overrides localhost:3306 in application.properties to point to the mysql-db container
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/taskflow_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      DB_PASSWORD: rootpassword
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
