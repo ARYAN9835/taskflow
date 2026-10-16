@@ -1,24 +1,26 @@
 pipeline {
     agent any
 
+    tools {
+        // This tells Jenkins to inject Maven into the pipeline path
+        maven 'Maven 3.9'
+    }
+
     stages {
         stage('Checkout Code') {
             steps {
-                // Pulls the code into the Jenkins workspace
                 checkout scm
             }
         }
 
         stage('Run Unit Tests') {
             steps {
-                // Runs your Mockito unit tests to ensure business logic is correct
                 sh 'mvn clean test -Dtest=TaskServiceTest'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                // Uses your multi-stage Dockerfile to build the production image
                 sh 'docker build -t taskflow-backend:jenkins-latest .'
             }
         }
